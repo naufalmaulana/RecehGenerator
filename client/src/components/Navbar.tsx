@@ -4,9 +4,8 @@ import { useNavigate } from "react-router";
 type Theme = "light" | "dark";
 
 const menuItems = [
-  { label: "Menu Item 1", path: "/menu-1" },
-  { label: "Menu Item 2", path: "/menu-2" },
-  { label: "Menu Item 3", path: "/menu-3" },
+  { label: "Home", path: "/home" },
+  { label: "Favorite", path: "/favorite" },
 ];
 
 export default function Navbar() {
@@ -18,7 +17,10 @@ export default function Navbar() {
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -36,11 +38,12 @@ export default function Navbar() {
   return (
     <div className={theme === "dark" ? "dark" : ""}>
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 sm:px-6
         bg-white dark:bg-zinc-900
         border-b border-zinc-200 dark:border-zinc-700
-        shadow-sm transition-colors duration-300">
-
+        shadow-sm transition-colors duration-300"
+      >
         {/* LEFT — Hamburger + Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
@@ -96,9 +99,11 @@ export default function Navbar() {
                       flex items-center gap-2
                       focus:outline-none focus-visible:bg-zinc-100 dark:focus-visible:bg-zinc-700"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500
+                    <span
+                      className="w-1 h-1 rounded-full bg-zinc-400 dark:bg-zinc-500
                       group-hover:bg-zinc-700 dark:group-hover:bg-zinc-300
-                      transition-colors duration-150 shrink-0" />
+                      transition-colors duration-150 shrink-0"
+                    />
                     {item.label}
                   </button>
                 </li>
@@ -106,7 +111,6 @@ export default function Navbar() {
             </ul>
           </div>
         </div>
-
 
         {/* RIGHT — Dark / Light toggle */}
         <button
