@@ -8,8 +8,8 @@ export default function Card() {
   return (
     <>
       <div className="max-w-[90%] lg:max-w-1/3 p-2">
-        <div className="bg-white dark:bg-zinc-900 block p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-xl relative flex justify-center items-center min-h-[150px] w-full transition-colors duration-300">
-          <p className="text-zinc-700 dark:text-zinc-300 text-center font-medium">
+        <div className="dark:bg-white bg-zinc-900 block p-6 border dark:border-zinc-100 border-zinc-800 rounded-2xl relative flex justify-center items-center min-h-[150px] w-full transition-colors duration-300">
+          <p className="dark:text-zinc-700 text-zinc-300 text-center font-medium">
             Lorem ipsum dolor, sit amet consectetur adipisicing elit.
             Necessitatibus architecto quisquam amet eligendi ab est quia quam
             nihil quaerat commodi.
