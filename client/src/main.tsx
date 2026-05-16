@@ -6,6 +6,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import App from "./App";
 import Home from "./pages/Home";
 import Favorite from "./pages/Favorite";
+import SignIn from "./pages/SignIn";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: "/favorite",
         element: <Favorite />,
+      },
+      {
+        path: "/signin",
+        element: <SignIn />,
       },
     ],
   },

@@ -6,6 +6,7 @@ type Theme = "light" | "dark";
 const menuItems = [
   { label: "Home", path: "/home" },
   { label: "Favorite", path: "/favorite" },
+  { label: "Sign in", path: "/signin" },
 ];
 
 export default function Navbar() {

@@ -3,12 +3,12 @@ import Card from "../components/Card";
 export default function Home() {
   return (
     <>
-      <div className="w-screen h-screen flex items-center justify-center bg-slate-200 dark:bg-slate-900">
+      <div className="flex min-h-[calc(100vh-3.5rem)] mt-14 items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 px-4">
         <div className="flex justify-center items-center flex-col">
           <Card />
           <button
             type="button"
-            className="text-black bg-white box-border border border-black rounded-lg hover:bg-rose-400 hover:text-white hover:border-white focus:ring-4 focus:ring-white shadow-xs font-medium leading-5 rounded-base text-sm px-4 py-2.5 my-2 mx-auto block focus:outline-none cursor-pointer transition"
+            className="mt-6 group relative flex justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200 shadow-sm"
           >
             Tell me a joke!
           </button>

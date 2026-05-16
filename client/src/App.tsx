@@ -8,7 +8,7 @@ function App() {
   const isDark = useSelector(selectIsDark);
   return (
     <>
-      <div className={isDark ? "dark" : ""}>
+      <div className={isDark ? "dark bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 min-h-screen w-full" : "bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 min-h-screen w-full"}>
         <Navbar />
         <Outlet />
       </div>
