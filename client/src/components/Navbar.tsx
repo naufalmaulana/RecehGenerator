@@ -6,6 +6,7 @@ type Theme = "light" | "dark";
 const menuItems = [
   { label: "Home", path: "/home" },
   { label: "Favorite", path: "/favorite" },
+  { label: "Add Joke", path: "/dashboard" },
   { label: "Sign in", path: "/signin" },
 ];
 

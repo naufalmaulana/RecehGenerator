@@ -7,10 +7,14 @@ import App from "./App";
 import Home from "./pages/Home";
 import Favorite from "./pages/Favorite";
 import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import Dashboard from "./pages/Dashboard";
+import ErrorPage from "./pages/ErrorPage";
 
 const router = createBrowserRouter([
   {
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
       {
         path: "/",
@@ -27,6 +31,14 @@ const router = createBrowserRouter([
       {
         path: "/signin",
         element: <SignIn />,
+      },
+      {
+        path: "/signup",
+        element: <SignUp />,
+      },
+      {
+        path: "/dashboard",
+        element: <Dashboard />,
       },
     ],
   },
