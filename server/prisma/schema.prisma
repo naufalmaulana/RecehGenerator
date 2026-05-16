@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String?        
+  googleId      String?        @unique
+  role          String         @default("USER")
+  createdAt     DateTime       @default(now())
+  
+  submittedJokes Joke[]        @relation("SubmittedJokes")
+  favorites      Favorite[]
+  notifications  Notification[]
+}
+
+model Joke {
+  id          Int        @id @default(autoincrement())
+  text        String
+  category    String     
+  status      String     @default("PENDING")
+  authorId    Int?
+  author      User?      @relation("SubmittedJokes", fields: [authorId], references: [id])
+  createdAt   DateTime   @default(now())
+  
+  favoritedBy Favorite[]
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  jokeId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  joke Joke @relation(fields: [jokeId], references: [id])
+
+  @@unique([userId, jokeId])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
