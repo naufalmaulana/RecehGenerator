@@ -7,6 +7,7 @@ const menuItems = [
   { label: "Home", path: "/home" },
   { label: "Favorite", path: "/favorite" },
   { label: "Add Joke", path: "/dashboard" },
+  { label: "Inbox", path: "/inbox" },
   { label: "Sign in", path: "/signin" },
 ];
 
