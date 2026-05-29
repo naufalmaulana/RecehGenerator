@@ -30,7 +30,7 @@ const router = createBrowserRouter([
       {
         path: "/favorite",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireUser>
             <Favorite />
           </ProtectedRoute>
         ),
@@ -54,7 +54,7 @@ const router = createBrowserRouter([
       {
         path: "/inbox",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireUser>
             <Inbox />
           </ProtectedRoute>
         ),

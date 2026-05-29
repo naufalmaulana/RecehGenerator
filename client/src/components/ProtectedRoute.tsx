@@ -5,9 +5,10 @@ import type { RootState } from "../store";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requireUser?: boolean;
 }
 
-export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requireAdmin = false, requireUser = false }: ProtectedRouteProps) {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const location = useLocation();
 
@@ -21,6 +22,10 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
 
   if (requireAdmin && user?.role !== 'ADMIN') {
     return <Navigate to="/home" replace />;
+  }
+
+  if (requireUser && user?.role === 'ADMIN') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

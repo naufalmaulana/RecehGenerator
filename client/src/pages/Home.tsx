@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 import Card, { type Joke } from "../components/Card";
 import apiClient from "../api/axios";
 
@@ -6,6 +9,15 @@ export default function Home() {
   const [jokes, setJokes] = useState<Joke[]>([]);
   const [currentJoke, setCurrentJoke] = useState<Joke | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (user?.role === 'ADMIN') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const fetchJokes = async () => {
     try {

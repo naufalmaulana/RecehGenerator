@@ -25,10 +25,16 @@ export default function Navbar() {
       ];
     }
     
+    if (user?.role === 'ADMIN') {
+      return [
+        { label: "Dashboard", path: "/dashboard" },
+      ];
+    }
+    
     return [
       { label: "Home", path: "/home" },
       { label: "Favorite", path: "/favorite" },
-      { label: user?.role === 'ADMIN' ? "Dashboard" : "Add Joke", path: "/dashboard" },
+      { label: "Add Joke", path: "/dashboard" },
       { label: "Inbox", path: "/inbox" },
     ];
   };
