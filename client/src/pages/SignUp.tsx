@@ -1,9 +1,76 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "../store/authSlice";
+import apiClient from "../api/axios";
+import Swal from "sweetalert2";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      Swal.fire({
+        icon: "warning",
+        title: "Passwords do not match",
+        text: "Please make sure your passwords match exactly.",
+        confirmButtonColor: "#2563eb",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await apiClient.post("/auth/register", { email, password });
+      dispatch(setCredentials({ user: response.data.user, token: response.data.token }));
+      
+      Swal.fire({
+        icon: "success",
+        title: "Account Created!",
+        text: "Welcome to RecehGenerator!",
+        confirmButtonColor: "#2563eb",
+        timer: 1500,
+        showConfirmButton: false
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Registration Failed",
+        text: error.response?.data?.error || "An unexpected error occurred",
+        confirmButtonColor: "#2563eb",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      const response = await apiClient.post("/auth/google", { token: credentialResponse.credential });
+      dispatch(setCredentials({ user: response.data.user, token: response.data.token }));
+      navigate("/");
+    } catch (error: any) {
+      Swal.fire({
+        icon: "error",
+        title: "Google Login Failed",
+        text: "Could not authenticate with Google",
+        confirmButtonColor: "#2563eb",
+      });
+    }
+  };
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] mt-14 items-center justify-center bg-zinc-50 dark:bg-zinc-950 px-4 py-12 sm:px-6 lg:px-8 transition-colors duration-300">
@@ -16,7 +83,7 @@ export default function SignUp() {
             Join us to get started
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -28,6 +95,8 @@ export default function SignUp() {
                 type="email"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="mt-1 relative block w-full rounded-lg border-0 py-2.5 px-3 text-zinc-900 dark:text-white ring-1 ring-inset ring-zinc-300 dark:ring-zinc-700 bg-white dark:bg-zinc-800 placeholder:text-zinc-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 transition-colors duration-200"
                 placeholder="you@example.com"
               />
@@ -44,6 +113,8 @@ export default function SignUp() {
                   type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 pl-3 pr-10 text-zinc-900 dark:text-white ring-1 ring-inset ring-zinc-300 dark:ring-zinc-700 bg-white dark:bg-zinc-800 placeholder:text-zinc-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 transition-colors duration-200"
                   placeholder="••••••••"
                 />
@@ -77,6 +148,8 @@ export default function SignUp() {
                   type={showConfirmPassword ? "text" : "password"}
                   autoComplete="new-password"
                   required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="block w-full rounded-lg border-0 py-2.5 pl-3 pr-10 text-zinc-900 dark:text-white ring-1 ring-inset ring-zinc-300 dark:ring-zinc-700 bg-white dark:bg-zinc-800 placeholder:text-zinc-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 transition-colors duration-200"
                   placeholder="••••••••"
                 />
@@ -102,13 +175,38 @@ export default function SignUp() {
 
           <div>
             <button
-              type="button"
-              className="group relative flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200 shadow-sm"
+              type="submit"
+              disabled={loading}
+              className="group relative flex w-full justify-center rounded-lg bg-blue-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200 shadow-sm disabled:opacity-50"
             >
-              Sign up
+              {loading ? "Signing up..." : "Sign up"}
             </button>
           </div>
           
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-zinc-300 dark:border-zinc-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white dark:bg-zinc-900 px-2 text-zinc-500">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => {
+                Swal.fire({
+                  icon: "error",
+                  title: "Google Login Failed",
+                  text: "An error occurred while connecting to Google.",
+                  confirmButtonColor: "#2563eb",
+                });
+              }}
+              useOneTap
+            />
+          </div>
+
           <div className="text-center text-sm mt-4">
             <span className="text-zinc-600 dark:text-zinc-400">Already have an account? </span>
             <Link to="/signin" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors">

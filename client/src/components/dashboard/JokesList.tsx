@@ -1,41 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../../api/axios";
+import Swal from "sweetalert2";
 
 type Joke = {
   id: number;
   text: string;
   category: string;
-  dateAdded: string;
+  status: string;
+  createdAt: string;
 };
 
-const mockJokes: Joke[] = [
-  { id: 1, text: "Why don't scientists trust atoms? Because they make up everything.", category: "SFW", dateAdded: "2023-10-01" },
-  { id: 2, text: "Dark humor is like food. Not everyone gets it.", category: "NSFW", dateAdded: "2023-10-05" },
-  { id: 3, text: "Why did the scarecrow win an award? Because he was outstanding in his field.", category: "SFW", dateAdded: "2023-10-10" },
-  { id: 4, text: "Political joke placeholder.", category: "NSFW", dateAdded: "2023-10-12" },
-  { id: 5, text: "Another SFW joke here.", category: "SFW", dateAdded: "2023-10-15" },
-  { id: 6, text: "Religious joke placeholder.", category: "NSFW", dateAdded: "2023-10-16" },
-  { id: 7, text: "NSFW joke placeholder (disclaimer: for dev test only).", category: "NSFW", dateAdded: "2023-10-18" },
-  { id: 8, text: "Sex joke placeholder.", category: "NSFW", dateAdded: "2023-10-20" },
-  { id: 9, text: "Why did the bicycle fall over? It was two tired.", category: "SFW", dateAdded: "2023-10-21" },
-  { id: 10, text: "What do you call a fake noodle? An impasta.", category: "SFW", dateAdded: "2023-10-22" },
-  { id: 11, text: "What do you call an alligator in a vest? An investigator.", category: "SFW", dateAdded: "2023-10-23" },
-  { id: 12, text: "How does a penguin build its house? Igloos it together.", category: "SFW", dateAdded: "2023-10-24" },
-];
-
 export default function JokesList() {
+  const [jokes, setJokes] = useState<Joke[]>([]);
   const [filter, setFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [loading, setLoading] = useState(true);
 
-  let filteredJokes = mockJokes.filter((joke) => {
+  const fetchJokes = async () => {
+    try {
+      const response = await apiClient.get("/jokes/all");
+      setJokes(response.data);
+    } catch (error) {
+      console.error("Failed to fetch jokes", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJokes();
+  }, []);
+
+  const handleDelete = async (id: number) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await apiClient.delete(`/jokes/${id}`);
+        setJokes(jokes.filter(joke => joke.id !== id));
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'The joke has been deleted.',
+          showConfirmButton: false,
+          timer: 1500
+        });
+      } catch (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to delete joke.'
+        });
+      }
+    }
+  };
+
+  let filteredJokes = jokes.filter((joke) => {
     if (filter === "All") return true;
     return joke.category === filter;
   });
 
   filteredJokes = filteredJokes.sort((a, b) => {
-    const dateA = new Date(a.dateAdded).getTime();
-    const dateB = new Date(b.dateAdded).getTime();
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
     return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
   });
 
@@ -73,12 +110,17 @@ export default function JokesList() {
             <tr>
               <th scope="col" className="px-4 py-3 font-medium">Joke</th>
               <th scope="col" className="px-4 py-3 font-medium">Category</th>
+              <th scope="col" className="px-4 py-3 font-medium">Status</th>
               <th scope="col" className="px-4 py-3 font-medium">Date Added</th>
               <th scope="col" className="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
-            {displayedJokes.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center">Loading jokes...</td>
+              </tr>
+            ) : displayedJokes.length > 0 ? (
               displayedJokes.map((joke) => (
                 <tr key={joke.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="px-4 py-3 max-w-xs truncate" title={joke.text}>{joke.text}</td>
@@ -91,12 +133,18 @@ export default function JokesList() {
                       {joke.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3">{joke.dateAdded}</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      {joke.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">{new Date(joke.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-3 flex justify-end gap-2">
-                    <button className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" aria-label="Edit">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
-                    </button>
-                    <button className="p-1.5 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors" aria-label="Delete">
+                    <button 
+                      onClick={() => handleDelete(joke.id)}
+                      className="p-1.5 text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors" 
+                      aria-label="Delete"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
                     </button>
                   </td>
@@ -104,7 +152,7 @@ export default function JokesList() {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center">No jokes found.</td>
+                <td colSpan={5} className="px-4 py-8 text-center">No jokes found.</td>
               </tr>
             )}
           </tbody>

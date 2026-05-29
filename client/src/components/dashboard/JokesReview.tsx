@@ -1,41 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../../api/axios";
+import Swal from "sweetalert2";
 
 type ReviewJoke = {
   id: number;
   text: string;
   category: string;
-  dateAdded: string;
+  createdAt: string;
 };
 
-const reviewData: ReviewJoke[] = [
-  { id: 101, text: "Why do programmers prefer dark mode? Because light attracts bugs.", category: "SFW", dateAdded: "2023-11-01" },
-  { id: 102, text: "A SQL query goes into a bar, walks up to two tables and asks... 'Can I join you?'", category: "SFW", dateAdded: "2023-11-02" },
-  { id: 103, text: "NSFW joke pending review...", category: "NSFW", dateAdded: "2023-11-03" },
-  { id: 104, text: "Another pending SFW joke.", category: "SFW", dateAdded: "2023-11-04" },
-  { id: 105, text: "Pending joke 5.", category: "NSFW", dateAdded: "2023-11-05" },
-  { id: 106, text: "Pending joke 6.", category: "SFW", dateAdded: "2023-11-06" },
-  { id: 107, text: "Pending joke 7.", category: "NSFW", dateAdded: "2023-11-07" },
-  { id: 108, text: "Pending joke 8.", category: "SFW", dateAdded: "2023-11-08" },
-  { id: 109, text: "Pending joke 9.", category: "NSFW", dateAdded: "2023-11-09" },
-  { id: 110, text: "Pending joke 10.", category: "SFW", dateAdded: "2023-11-10" },
-  { id: 111, text: "Pending joke 11.", category: "NSFW", dateAdded: "2023-11-11" },
-  { id: 112, text: "Pending joke 12.", category: "SFW", dateAdded: "2023-11-12" },
-];
-
 export default function JokesReview() {
+  const [jokes, setJokes] = useState<ReviewJoke[]>([]);
   const [filter, setFilter] = useState("All");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [loading, setLoading] = useState(true);
 
-  let filteredJokes = reviewData.filter((joke) => {
+  const fetchPendingJokes = async () => {
+    try {
+      const response = await apiClient.get("/jokes/review");
+      setJokes(response.data);
+    } catch (error) {
+      console.error("Failed to fetch pending jokes", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingJokes();
+  }, []);
+
+  const handleUpdateStatus = async (id: number, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      await apiClient.put(`/jokes/${id}/status`, { status });
+      setJokes(jokes.filter(joke => joke.id !== id));
+      Swal.fire({
+        icon: 'success',
+        title: status === 'APPROVED' ? 'Approved!' : 'Rejected!',
+        text: `Joke has been ${status.toLowerCase()}.`,
+        showConfirmButton: false,
+        timer: 1500
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Failed to ${status.toLowerCase()} joke.`
+      });
+    }
+  };
+
+  let filteredJokes = jokes.filter((joke) => {
     if (filter === "All") return true;
     return joke.category === filter;
   });
 
   filteredJokes = filteredJokes.sort((a, b) => {
-    const dateA = new Date(a.dateAdded).getTime();
-    const dateB = new Date(b.dateAdded).getTime();
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
     return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
   });
 
@@ -45,7 +69,7 @@ export default function JokesReview() {
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6 transition-colors duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Pending Review</h2>
+        <h2 className="text-xl font-semibold text-zinc-900 dark:text-white">Pending Review ({jokes.length})</h2>
         
         <div className="flex gap-2">
           <select 
@@ -78,11 +102,15 @@ export default function JokesReview() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
-            {displayedJokes.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-4 py-8 text-center">Loading jokes...</td>
+              </tr>
+            ) : displayedJokes.length > 0 ? (
               displayedJokes.map((joke) => (
                 <tr key={joke.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                   <td className="px-4 py-4 max-w-md" title={joke.text}>{joke.text}</td>
-                  <td className="px-4 py-4 whitespace-nowrap">{joke.dateAdded}</td>
+                  <td className="px-4 py-4 whitespace-nowrap">{new Date(joke.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       joke.category === "SFW" 
@@ -93,11 +121,17 @@ export default function JokesReview() {
                     </span>
                   </td>
                   <td className="px-4 py-4 flex justify-end gap-2">
-                    <button className="flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                    <button 
+                      onClick={() => handleUpdateStatus(joke.id, 'APPROVED')}
+                      className="flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                       Approve
                     </button>
-                    <button className="flex items-center gap-1 rounded-md bg-rose-50 dark:bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors">
+                    <button 
+                      onClick={() => handleUpdateStatus(joke.id, 'REJECTED')}
+                      className="flex items-center gap-1 rounded-md bg-rose-50 dark:bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition-colors"
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                       Reject
                     </button>
@@ -106,7 +140,7 @@ export default function JokesReview() {
               ))
             ) : (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center">No jokes found.</td>
+                <td colSpan={4} className="px-4 py-8 text-center">No jokes pending review.</td>
               </tr>
             )}
           </tbody>

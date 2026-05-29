@@ -1,71 +1,75 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import apiClient from "../api/axios";
 
 type Message = {
   id: number;
-  title: string;
-  body: string;
-  date: string;
+  message: string;
   isRead: boolean;
-  type: "system" | "approval" | "rejection";
+  createdAt: string;
 };
 
-const mockMessages: Message[] = [
-  {
-    id: 1,
-    title: "Joke Approved! 🎉",
-    body: "Congratulations! Your joke 'Why don't scientists trust atoms?' has been approved by the admin and is now live on the homepage.",
-    date: "2023-11-16 10:00 AM",
-    isRead: false,
-    type: "approval",
-  },
-  {
-    id: 2,
-    title: "Joke Submission Received",
-    body: "Your joke has been successfully submitted and is waiting for admin review. We'll notify you once a decision is made.",
-    date: "2023-11-15 02:30 PM",
-    isRead: true,
-    type: "system",
-  },
-  {
-    id: 3,
-    title: "Joke Rejected 😔",
-    body: "Unfortunately, your joke 'Why did the chicken cross the road?' did not meet our quality guidelines and was rejected.",
-    date: "2023-11-10 09:15 AM",
-    isRead: true,
-    type: "rejection",
-  },
-];
-
 export default function Inbox() {
-  const [messages, setMessages] = useState(mockMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const markAsRead = (id: number) => {
-    setMessages(messages.map(m => m.id === id ? { ...m, isRead: true } : m));
-    setSelectedMessage(messages.find(m => m.id === id) || null);
+  useEffect(() => {
+    fetchInbox();
+  }, []);
+
+  const fetchInbox = async () => {
+    try {
+      const response = await apiClient.get("/notifications");
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Failed to fetch inbox", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const getIcon = (type: string) => {
-    switch (type) {
-      case "approval":
-        return (
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-emerald-600 dark:text-emerald-400"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          </div>
-        );
-      case "rejection":
-        return (
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-rose-600 dark:text-rose-400"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </div>
-        );
-      default:
-        return (
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-blue-600 dark:text-blue-400"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-          </div>
-        );
+  const markAsRead = async (id: number) => {
+    const msg = messages.find(m => m.id === id);
+    if (!msg) return;
+    
+    setSelectedMessage(msg);
+
+    if (!msg.isRead) {
+      try {
+        await apiClient.put(`/notifications/${id}/read`);
+        setMessages(messages.map(m => m.id === id ? { ...m, isRead: true } : m));
+      } catch (error) {
+        console.error("Failed to mark as read", error);
+      }
     }
+  };
+
+  const getIcon = (messageStr: string) => {
+    if (messageStr.toLowerCase().includes("approved")) {
+      return (
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-emerald-600 dark:text-emerald-400"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+      );
+    }
+    if (messageStr.toLowerCase().includes("rejected")) {
+      return (
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-rose-600 dark:text-rose-400"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </div>
+      );
+    }
+    return (
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-blue-600 dark:text-blue-400"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+      </div>
+    );
+  };
+
+  const getTitle = (messageStr: string) => {
+    if (messageStr.toLowerCase().includes("approved")) return "Joke Approved! 🎉";
+    if (messageStr.toLowerCase().includes("rejected")) return "Joke Rejected 😔";
+    return "Joke Update";
   };
 
   return (
@@ -85,28 +89,36 @@ export default function Inbox() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Message List */}
           <div className="md:col-span-1 space-y-3">
-            {messages.map((msg) => (
-              <button
-                key={msg.id}
-                onClick={() => markAsRead(msg.id)}
-                className={`w-full text-left p-4 rounded-xl border transition-all duration-200 flex gap-3 ${
-                  selectedMessage?.id === msg.id 
-                    ? "bg-white dark:bg-zinc-800 border-blue-500 shadow-md dark:border-blue-500" 
-                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 shadow-sm"
-                }`}
-              >
-                {getIcon(msg.type)}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-sm truncate ${msg.isRead ? "font-medium text-zinc-700 dark:text-zinc-300" : "font-bold text-zinc-900 dark:text-white"}`}>
-                      {msg.title}
+            {loading ? (
+              <div className="text-center py-4 text-zinc-500 dark:text-zinc-400">Loading inbox...</div>
+            ) : messages.length === 0 ? (
+              <div className="text-center py-4 text-zinc-500 dark:text-zinc-400">No messages found.</div>
+            ) : (
+              messages.map((msg) => (
+                <button
+                  key={msg.id}
+                  onClick={() => markAsRead(msg.id)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all duration-200 flex gap-3 ${
+                    selectedMessage?.id === msg.id 
+                      ? "bg-white dark:bg-zinc-800 border-blue-500 shadow-md dark:border-blue-500" 
+                      : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-blue-300 dark:hover:border-blue-700 shadow-sm"
+                  }`}
+                >
+                  {getIcon(msg.message)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-sm truncate ${msg.isRead ? "font-medium text-zinc-700 dark:text-zinc-300" : "font-bold text-zinc-900 dark:text-white"}`}>
+                        {getTitle(msg.message)}
+                      </p>
+                      {!msg.isRead && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-600 mt-1.5"></span>}
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      {new Date(msg.createdAt).toLocaleDateString()}
                     </p>
-                    {!msg.isRead && <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-600 mt-1.5"></span>}
                   </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{msg.date}</p>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
 
           {/* Message Detail View */}
@@ -114,14 +126,16 @@ export default function Inbox() {
             {selectedMessage ? (
               <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 min-h-[300px] transition-colors duration-300">
                 <div className="flex items-center gap-4 border-b border-zinc-100 dark:border-zinc-800 pb-6 mb-6">
-                  {getIcon(selectedMessage.type)}
+                  {getIcon(selectedMessage.message)}
                   <div>
-                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{selectedMessage.title}</h2>
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">{selectedMessage.date}</p>
+                    <h2 className="text-xl font-bold text-zinc-900 dark:text-white">{getTitle(selectedMessage.message)}</h2>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      {new Date(selectedMessage.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </div>
                 <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none text-zinc-700 dark:text-zinc-300 leading-relaxed">
-                  <p>{selectedMessage.body}</p>
+                  <p>{selectedMessage.message}</p>
                 </div>
               </div>
             ) : (

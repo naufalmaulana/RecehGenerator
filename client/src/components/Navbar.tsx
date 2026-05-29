@@ -1,21 +1,39 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "../store";
+import { logout } from "../store/authSlice";
+import { toggleTheme, selectIsDark } from "../store/appSlice/index";
 
 type Theme = "light" | "dark";
 
-const menuItems = [
-  { label: "Home", path: "/home" },
-  { label: "Favorite", path: "/favorite" },
-  { label: "Add Joke", path: "/dashboard" },
-  { label: "Inbox", path: "/inbox" },
-  { label: "Sign in", path: "/signin" },
-];
-
 export default function Navbar() {
-  const [theme, setTheme] = useState<Theme>("light");
   const [menuOpen, setMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const isDark = useSelector(selectIsDark);
+  const theme = isDark ? "dark" : "light";
+
+  const getMenuItems = () => {
+    if (!isAuthenticated) {
+      return [
+        { label: "Home", path: "/home" },
+        { label: "Sign in", path: "/signin" },
+      ];
+    }
+    
+    return [
+      { label: "Home", path: "/home" },
+      { label: "Favorite", path: "/favorite" },
+      { label: user?.role === 'ADMIN' ? "Dashboard" : "Add Joke", path: "/dashboard" },
+      { label: "Inbox", path: "/inbox" },
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -36,7 +54,13 @@ export default function Navbar() {
     document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === "light" ? "dark" : "light"));
+  const handleToggleTheme = () => dispatch(toggleTheme());
+
+  const handleLogout = () => {
+    dispatch(logout());
+    setMenuOpen(false);
+    navigate("/home");
+  };
 
   return (
     <div className={theme === "dark" ? "dark" : ""}>
@@ -111,13 +135,37 @@ export default function Navbar() {
                   </button>
                 </li>
               ))}
+              
+              {isAuthenticated && (
+                <li role="none">
+                  <div className="h-px bg-zinc-200 dark:bg-zinc-700 my-1" />
+                  <button
+                    role="menuitem"
+                    onClick={handleLogout}
+                    className="group w-full text-left px-4 py-2.5 text-sm font-medium
+                      text-rose-600 dark:text-rose-400
+                      hover:bg-rose-50 dark:hover:bg-rose-950/30
+                      hover:pl-6
+                      transition-all duration-150
+                      flex items-center gap-2
+                      focus:outline-none"
+                  >
+                    <span
+                      className="w-1 h-1 rounded-full bg-rose-400 dark:bg-rose-500
+                      group-hover:bg-rose-600 dark:group-hover:bg-rose-400
+                      transition-colors duration-150 shrink-0"
+                    />
+                    Sign out
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         {/* RIGHT — Dark / Light toggle */}
         <button
-          onClick={toggleTheme}
+          onClick={handleToggleTheme}
           aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
           className="relative w-9 h-9 flex items-center justify-center rounded-md
             text-zinc-700 dark:text-zinc-200

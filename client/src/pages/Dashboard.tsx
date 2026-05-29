@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store";
 import JokesList from "../components/dashboard/JokesList";
 import AddJoke from "../components/dashboard/AddJoke";
 import JokesReview from "../components/dashboard/JokesReview";
@@ -6,8 +8,33 @@ import JokesReview from "../components/dashboard/JokesReview";
 type Tab = "list" | "add" | "review";
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<Tab>("list");
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // If user is ADMIN, default to list. If USER, force to add
+  const [activeTab, setActiveTab] = useState<Tab>(user?.role === 'ADMIN' ? "list" : "add");
 
+  // Prevent users from accidentally switching tabs if somehow they got past UI
+  useEffect(() => {
+    if (user?.role !== 'ADMIN') {
+      setActiveTab("add");
+    }
+  }, [user]);
+
+  if (user?.role !== 'ADMIN') {
+    // Normal User View
+    return (
+      <div className="flex min-h-[calc(100vh-3.5rem)] mt-14 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
+        <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-6">Submit a Joke</h1>
+            <AddJoke />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin View
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] mt-14 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
       
@@ -25,7 +52,7 @@ export default function Dashboard() {
                 : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
             }`}
           >
-            Jokes List
+            Jokes Directory
           </button>
           <button 
             onClick={() => setActiveTab("add")}
@@ -46,7 +73,6 @@ export default function Dashboard() {
             }`}
           >
             Jokes Review
-            <span className="bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 py-0.5 px-2 rounded-full text-xs">3</span>
           </button>
         </nav>
       </div>
@@ -61,14 +87,14 @@ export default function Dashboard() {
             onChange={(e) => setActiveTab(e.target.value as Tab)}
             className="w-full rounded-lg border-0 py-2.5 pl-4 pr-10 text-zinc-900 dark:text-white ring-1 ring-inset ring-zinc-300 dark:ring-zinc-700 bg-white dark:bg-zinc-900 focus:ring-2 focus:ring-blue-600 transition-colors"
           >
-            <option value="list">Jokes List</option>
+            <option value="list">Jokes Directory</option>
             <option value="add">Add Joke</option>
-            <option value="review">Jokes Review (3)</option>
+            <option value="review">Jokes Review</option>
           </select>
         </div>
 
         {activeTab === "list" && <JokesList />}
-        {activeTab === "add" && <AddJoke />}
+        {activeTab === "add" && <div className="max-w-4xl mx-auto"><AddJoke /></div>}
         {activeTab === "review" && <JokesReview />}
       </div>
     </div>
