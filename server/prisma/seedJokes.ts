@@ -1,32 +1,17 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Start seeding...');
-
-  // Check if admin already exists
-  let existingAdmin = await prisma.user.findUnique({
+  const existingAdmin = await prisma.user.findUnique({
     where: { email: 'admin@recehgenerator.com' },
   });
 
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
-    
-    existingAdmin = await prisma.user.create({
-      data: {
-        email: 'admin@recehgenerator.com',
-        password: hashedPassword,
-        role: 'ADMIN',
-      },
-    });
-    console.log(`Created admin user with email: ${existingAdmin.email}`);
-  } else {
-    console.log('Admin user already exists.');
+    console.log("No admin found. Please run seed.ts first.");
+    return;
   }
 
-  // Dummy Jokes
   const dummyJokes = [
     { text: "Why do programmers prefer dark mode? Because light attracts bugs.", category: "SFW", status: "APPROVED", authorId: existingAdmin.id },
     { text: "How many programmers does it take to change a light bulb? None, that's a hardware problem.", category: "SFW", status: "APPROVED", authorId: existingAdmin.id },
@@ -39,7 +24,6 @@ async function main() {
     { text: "To understand what recursion is, you must first understand recursion.", category: "SFW", status: "APPROVED", authorId: existingAdmin.id },
     { text: "I would love to change the world, but they won't give me the source code.", category: "SFW", status: "APPROVED", authorId: existingAdmin.id },
     
-    // NSFW (Mild / Literal Not Safe For Work)
     { text: "Why did the worker get fired from the calendar factory? He took a couple of days off.", category: "NSFW", status: "APPROVED", authorId: existingAdmin.id },
     { text: "I told my boss that three companies were after me and I needed a raise. He asked which ones. I said gas, water, and electricity.", category: "NSFW", status: "APPROVED", authorId: existingAdmin.id },
     { text: "My boss told me to have a good day. So I went home.", category: "NSFW", status: "APPROVED", authorId: existingAdmin.id },
@@ -52,24 +36,12 @@ async function main() {
     { text: "I started a new job as a tailor, but it was just sew sew.", category: "NSFW", status: "APPROVED", authorId: existingAdmin.id },
   ];
 
-  const existingJokesCount = await prisma.joke.count();
-  if (existingJokesCount === 0) {
-    await prisma.joke.createMany({
-      data: dummyJokes
-    });
-    console.log('Inserted 20 dummy jokes.');
-  } else {
-    console.log('Jokes already exist, skipping dummy jokes.');
-  }
-
-  console.log('Seeding finished.');
+  await prisma.joke.createMany({
+    data: dummyJokes
+  });
+  console.log('Inserted 20 dummy jokes.');
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

@@ -65,7 +65,7 @@ export default function Card({ joke, favoriteId, onRemoveFavorite }: CardProps) 
   const isFavoritedView = !!onRemoveFavorite;
 
   return (
-    <div className="w-full md:w-1/2 lg:w-1/3 p-2">
+    <div className="w-full md:w-[500px] p-2">
       <div className="dark:bg-white bg-zinc-900 block p-6 border dark:border-zinc-100 border-zinc-800 rounded-2xl relative flex flex-col justify-center items-center min-h-[150px] w-full transition-colors duration-300">
         <p className="dark:text-zinc-700 text-zinc-300 text-center font-medium mb-4">
           {joke.text}
