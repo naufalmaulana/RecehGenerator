@@ -14,6 +14,7 @@ export default function Home() {
 
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.auth);
+  const isDark = useSelector((state: RootState) => state.counter.isDark);
 
   useEffect(() => {
     if (user?.role === 'ADMIN') {
@@ -36,9 +37,24 @@ export default function Home() {
     fetchJokes();
   }, []);
 
+  // Reset the card if they switch themes so they don't see an NSFW joke in Light mode
+  useEffect(() => {
+    setShowCard(false);
+    setCurrentJoke(null);
+  }, [isDark]);
+
   const randomizeJoke = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.currentTarget.classList.add("mb-6");
     if (jokes.length === 0 || isCycling) return;
+    
+    // Filter jokes based on current theme
+    const targetCategory = isDark ? "NSFW" : "SFW";
+    const availableJokes = jokes.filter(j => j.category === targetCategory);
+    
+    if (availableJokes.length === 0) {
+      console.warn(`No ${targetCategory} jokes available`);
+      return;
+    }
     
     setShowCard(true);
     setIsCycling(true);
@@ -47,15 +63,15 @@ export default function Home() {
     const maxIntervals = 20; // 20 intervals of 100ms = 2 seconds
     
     const interval = setInterval(() => {
-      const randomDisplay = Math.floor(Math.random() * jokes.length);
-      setCurrentJoke(jokes[randomDisplay]);
+      const randomDisplay = Math.floor(Math.random() * availableJokes.length);
+      setCurrentJoke(availableJokes[randomDisplay]);
       intervalCount++;
       
       if (intervalCount >= maxIntervals) {
         clearInterval(interval);
         // Final random selection
-        const finalRandomIndex = Math.floor(Math.random() * jokes.length);
-        setCurrentJoke(jokes[finalRandomIndex]);
+        const finalRandomIndex = Math.floor(Math.random() * availableJokes.length);
+        setCurrentJoke(availableJokes[finalRandomIndex]);
         setIsCycling(false);
       }
     }, 100);
