@@ -36,7 +36,8 @@ export default function Home() {
     fetchJokes();
   }, []);
 
-  const randomizeJoke = () => {
+  const randomizeJoke = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.currentTarget.classList.add("mb-6");
     if (jokes.length === 0 || isCycling) return;
     
     setShowCard(true);
@@ -78,7 +79,7 @@ export default function Home() {
             type="button"
             onClick={randomizeJoke}
             disabled={loading || jokes.length === 0 || isCycling}
-            className="mt-6 group relative flex justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200 shadow-sm disabled:opacity-50"
+            className="group relative flex justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200 shadow-sm disabled:opacity-50"
           >
             {isCycling ? "Generating..." : "Tell me a joke!"}
           </button>
