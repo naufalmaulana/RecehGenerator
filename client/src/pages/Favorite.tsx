@@ -27,7 +27,7 @@ export default function Favorite() {
     }
   };
 
-  const handleRemoveFavorite = async (favoriteId: number) => {
+  const handleRemoveFavorite = async (jokeId: number) => {
     const result = await Swal.fire({
       title: 'Remove Favorite?',
       text: "Do you want to remove this joke from your favorites?",
@@ -40,8 +40,8 @@ export default function Favorite() {
 
     if (result.isConfirmed) {
       try {
-        await apiClient.delete(`/favorites/${favoriteId}`);
-        setFavorites(favorites.filter(fav => fav.id !== favoriteId));
+        await apiClient.delete(`/favorites/${jokeId}`);
+        setFavorites(favorites.filter(fav => fav.joke.id !== jokeId));
         Swal.fire({
           icon: 'success',
           title: 'Removed!',
@@ -84,7 +84,7 @@ export default function Favorite() {
                 key={fav.id} 
                 joke={fav.joke} 
                 favoriteId={fav.id}
-                onRemoveFavorite={() => handleRemoveFavorite(fav.id)}
+                onRemoveFavorite={() => handleRemoveFavorite(fav.joke.id)}
               />
             ))}
           </div>
