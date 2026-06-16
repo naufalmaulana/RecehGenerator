@@ -5,7 +5,7 @@ import type { RootState } from "../store";
 import { logout } from "../store/authSlice";
 import { toggleTheme, selectIsDark } from "../store/appSlice/index";
 
-type Theme = "light" | "dark";
+
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);

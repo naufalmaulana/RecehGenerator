@@ -19,6 +19,11 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
   }
 
   const token = authHeader.split(' ')[1];
+  if (!token) {
+    res.status(401).json({ error: 'Unauthorized. Invalid token format.' });
+    return;
+  }
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;

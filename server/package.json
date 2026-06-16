@@ -5,6 +5,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "firebase-admin": "^13.10.0",
+    "firebase-functions": "^7.2.5",
     "google-auth-library": "^10.6.2",
     "json-server": "^1.0.0-beta.12",
     "jsonwebtoken": "^9.0.3"
@@ -12,9 +14,11 @@
   "name": "server",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

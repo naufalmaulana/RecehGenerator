@@ -3,7 +3,7 @@ import { store } from '../store';
 import { logout } from '../store/authSlice';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api'),
 });
 
 // Add a request interceptor to attach token

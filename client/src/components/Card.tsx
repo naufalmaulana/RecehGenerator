@@ -12,11 +12,10 @@ export interface Joke {
 
 interface CardProps {
   joke: Joke | null;
-  favoriteId?: number;
   onRemoveFavorite?: () => void;
 }
 
-export default function Card({ joke, favoriteId, onRemoveFavorite }: CardProps) {
+export default function Card({ joke, onRemoveFavorite }: CardProps) {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 

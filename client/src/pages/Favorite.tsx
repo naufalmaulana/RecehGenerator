@@ -83,7 +83,6 @@ export default function Favorite() {
               <Card 
                 key={fav.id} 
                 joke={fav.joke} 
-                favoriteId={fav.id}
                 onRemoveFavorite={() => handleRemoveFavorite(fav.joke.id)}
               />
             ))}
